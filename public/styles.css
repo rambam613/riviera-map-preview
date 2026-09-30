@@ -1,0 +1,878 @@
+/* Côte d'Azur · Eva & Josh — panorama base + landmark stickers */
+
+:root {
+  --cream: #f3ecdf;
+  --cream-deep: #e6dcc8;
+  --ink: #161c24;
+  --ink-soft: #2a3544;
+  --gold: #b8925a;
+  --chip: rgba(18, 22, 28, 0.88);
+  --shadow: rgba(30, 24, 16, 0.28);
+  --ease: cubic-bezier(0.22, 0.7, 0.2, 1);
+  --lift: translateY(-14px) scale(1.08);
+  font-synthesis: none;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  color: var(--ink);
+  font-family: "Outfit", system-ui, sans-serif;
+  background: #c8dce8;
+}
+
+/* Full panorama watercolor as the visible base map */
+.stage {
+  position: relative;
+  width: 100vw;
+  height: 100dvh;
+  overflow: hidden;
+  background-color: #b7d0e0;
+}
+
+.stage-base {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  opacity: 1;
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
+  display: block;
+}
+
+/* Soft edge vignette only — do not wash out the painting */
+.stage-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background:
+    radial-gradient(ellipse 78% 68% at 50% 48%, transparent 55%, rgba(30, 40, 50, 0.14) 100%);
+}
+
+/* ——— Board fills stage so % positions map to painted geography ——— */
+.board {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+
+/* Ambient floats */
+.ambient {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: visible;
+}
+
+.float {
+  position: absolute;
+  display: block;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 12px rgba(20, 40, 60, 0.18));
+  opacity: 0.9;
+  will-change: transform;
+}
+
+/* Plane — upper sky */
+.plane {
+  width: 14%;
+  top: 3%;
+  left: -10%;
+  animation: plane-drift 52s linear infinite;
+  opacity: 0.88;
+  z-index: 0;
+}
+
+/* Boats — lower-half sea */
+.yacht {
+  width: 11%;
+  left: 36%;
+  top: 78%;
+  animation: bob-slow 8.5s ease-in-out infinite;
+  opacity: 0.9;
+}
+
+.sailboat-a {
+  width: 7%;
+  left: 18%;
+  top: 82%;
+  animation: bob-slow 7s ease-in-out infinite 0.6s;
+}
+
+.sailboat-b {
+  width: 6.5%;
+  left: 60%;
+  top: 72%;
+  animation: bob-slow 9s ease-in-out infinite 1.2s;
+}
+
+/* Gulls — mid-sky */
+.gull {
+  width: 3.6%;
+  opacity: 0.78;
+  animation: gull-glide 24s ease-in-out infinite;
+}
+
+.gull-1 { left: 28%; top: 12%; width: 4.2%; animation-duration: 28s; }
+.gull-2 { left: 46%; top: 7%;  width: 3.1%; animation-duration: 21s; animation-delay: -5s; }
+.gull-3 { left: 68%; top: 14%; width: 2.9%; animation-duration: 25s; animation-delay: -10s; }
+.gull-4 { left: 12%; top: 18%; width: 3.3%; animation-duration: 30s; animation-delay: -2s; }
+.gull-5 { left: 88%; top: 22%; width: 2.4%; animation-duration: 19s; animation-delay: -8s; opacity: 0.65; }
+
+@keyframes plane-drift {
+  0%   { transform: translate(0, 6%) scale(0.9) rotate(-3deg); opacity: 0; }
+  6%   { opacity: 0.88; }
+  85%  { opacity: 0.88; }
+  100% { transform: translate(120vw, -14%) scale(1.05) rotate(5deg); opacity: 0; }
+}
+
+@keyframes bob-slow {
+  0%, 100% { transform: translateY(0) rotate(-1.2deg); }
+  50%      { transform: translateY(-10px) rotate(1.8deg); }
+}
+
+@keyframes gull-glide {
+  0%, 100% { transform: translate(0, 0); }
+  25%      { transform: translate(22px, -14px); }
+  50%      { transform: translate(48px, 6px); }
+  75%      { transform: translate(18px, -10px); }
+}
+
+/* ——— Landmark stickers ——— */
+.landmark {
+  position: absolute;
+  z-index: 3;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  outline: none;
+  width: var(--w, 20%);
+  transform: translateY(0) scale(1);
+  transition:
+    transform 0.45s var(--ease),
+    filter 0.45s var(--ease);
+  filter: drop-shadow(0 10px 18px transparent);
+  will-change: transform, filter;
+}
+
+.landmark img {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+  /* Follow transparent PNG silhouettes with a soft, clickable gold halo. */
+  filter:
+    drop-shadow(0 0 1px rgba(255, 220, 143, 0.95))
+    drop-shadow(0 0 5px rgba(194, 143, 54, 0.62))
+    drop-shadow(0 8px 14px rgba(30, 24, 16, 0.22));
+  transition: filter 0.45s var(--ease);
+}
+
+.landmark-label {
+  display: block;
+  margin-top: 0.15rem;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-style: italic;
+  font-size: clamp(0.85rem, 1.6vw, 1.15rem);
+  letter-spacing: 0.03em;
+  color: var(--ink-soft);
+  text-align: center;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.35s var(--ease), transform 0.35s var(--ease);
+  pointer-events: none;
+  text-shadow:
+    0 1px 0 rgba(255, 250, 240, 0.95),
+    0 0 10px rgba(255, 248, 235, 0.85),
+    0 2px 8px rgba(255, 248, 235, 0.7);
+}
+
+/* Hover / focus — the IMAGE lifts and the silhouette halo brightens. */
+.landmark:hover,
+.landmark:focus-visible,
+.landmark.is-open {
+  z-index: 8;
+  transform: var(--lift);
+  filter: drop-shadow(0 22px 28px rgba(30, 24, 16, 0.34));
+}
+
+.landmark:hover img,
+.landmark:focus-visible img,
+.landmark.is-open img {
+  filter:
+    drop-shadow(0 0 1.5px rgba(255, 235, 174, 1))
+    drop-shadow(0 0 8px rgba(225, 177, 77, 0.86))
+    drop-shadow(0 16px 22px rgba(30, 24, 16, 0.3));
+  animation: sticker-bob 2.4s ease-in-out infinite;
+}
+
+.landmark:hover .landmark-label,
+.landmark:focus-visible .landmark-label,
+.landmark.is-open .landmark-label {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@keyframes sticker-bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-5px); }
+}
+
+.landmark--primary {
+  z-index: 4;
+}
+
+.landmark--vignette {
+  z-index: 3;
+  opacity: 0.92;
+}
+
+/* ——— Position editing controls ——— */
+.board-controls {
+  position: absolute;
+  top: max(1rem, env(safe-area-inset-top));
+  right: max(1rem, env(safe-area-inset-right));
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 999px;
+  background: rgba(255, 250, 240, 0.5);
+  backdrop-filter: blur(10px) saturate(1.05);
+  -webkit-backdrop-filter: blur(10px) saturate(1.05);
+}
+
+.control-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2rem;
+  padding: 0.42rem 0.72rem;
+  border: 1px solid rgba(22, 28, 36, 0.18);
+  border-radius: 999px;
+  color: var(--ink);
+  background: rgba(255, 250, 240, 0.7);
+  font: 500 0.7rem/1 "Outfit", system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.control-button:hover,
+.control-button:focus-visible {
+  border-color: rgba(184, 146, 90, 0.8);
+  background: rgba(255, 250, 240, 0.95);
+  transform: translateY(-1px);
+}
+
+.control-button:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.control-button--secondary {
+  color: var(--ink-soft);
+  background: rgba(255, 250, 240, 0.42);
+}
+
+.control-status {
+  min-width: 1.5rem;
+  color: var(--gold);
+  font-size: 0.58rem;
+}
+
+/* Editing keeps stickers easy to grab without affecting ambient sprites. */
+.stage.edit-mode .landmark {
+  cursor: grab;
+  touch-action: none;
+}
+
+.stage.edit-mode .landmark img {
+  filter:
+    drop-shadow(0 0 1.25px rgba(255, 225, 151, 1))
+    drop-shadow(0 0 7px rgba(204, 153, 59, 0.78))
+    drop-shadow(0 8px 14px rgba(30, 24, 16, 0.22));
+}
+
+.stage.edit-mode .landmark:hover img,
+.stage.edit-mode .landmark:focus-visible img,
+.stage.edit-mode .landmark.is-open img {
+  filter:
+    drop-shadow(0 0 1.5px rgba(255, 235, 174, 1))
+    drop-shadow(0 0 8px rgba(225, 177, 77, 0.86))
+    drop-shadow(0 16px 22px rgba(30, 24, 16, 0.3));
+}
+
+/* A small corner target is present on every landmark while editing. */
+.resize-handle {
+  display: none;
+  position: absolute;
+  right: -0.48rem;
+  z-index: 6;
+  width: 1.05rem;
+  height: 1.05rem;
+  border: 1px solid rgba(255, 236, 180, 0.98);
+  border-radius: 0.28rem;
+  background: rgba(70, 47, 20, 0.82);
+  box-shadow: 0 2px 8px rgba(45, 29, 10, 0.35), 0 0 7px rgba(205, 156, 64, 0.7);
+  cursor: nwse-resize;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.resize-handle::before {
+  content: "";
+  position: absolute;
+  right: 0.18rem;
+  bottom: 0.18rem;
+  width: 0.42rem;
+  height: 0.42rem;
+  border-right: 2px solid #ffe9ad;
+  border-bottom: 2px solid #ffe9ad;
+}
+
+.stage.edit-mode .resize-handle {
+  display: block;
+}
+
+.stage.edit-mode .landmark.is-resizing .resize-handle,
+.stage.edit-mode .resize-handle:hover {
+  background: rgba(120, 80, 25, 0.95);
+  box-shadow: 0 2px 10px rgba(45, 29, 10, 0.45), 0 0 10px rgba(238, 190, 91, 0.95);
+}
+
+.stage.edit-mode .landmark.is-selected:not(.is-dragging) {
+  outline: 1px dashed rgba(184, 146, 90, 0.72);
+  outline-offset: 4px;
+}
+
+.stage.edit-mode .landmark.is-dragging,
+.stage.edit-mode .landmark.is-dragging:hover,
+.stage.edit-mode .landmark.is-dragging.is-open {
+  z-index: 15;
+  cursor: grabbing;
+  transform: none !important;
+  filter: drop-shadow(0 18px 24px rgba(30, 24, 16, 0.34));
+  transition: none;
+}
+
+.stage.edit-mode .landmark.is-resizing,
+.stage.edit-mode .landmark.is-resizing:hover,
+.stage.edit-mode .landmark.is-resizing.is-open {
+  z-index: 15;
+  cursor: nwse-resize;
+  transform: none !important;
+  filter: drop-shadow(0 18px 24px rgba(30, 24, 16, 0.34));
+  transition: none;
+}
+
+.stage.edit-mode .landmark.is-dragging img,
+.stage.edit-mode .landmark.is-resizing img {
+  animation: none !important;
+}
+
+.landmark-readout {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  left: 50%;
+  z-index: 4;
+  width: max-content;
+  max-width: 80vw;
+  padding: 0.25rem 0.42rem;
+  border: 1px solid rgba(196, 165, 116, 0.45);
+  border-radius: 5px;
+  color: #f5efe4;
+  background: rgba(18, 22, 28, 0.88);
+  font: 500 0.58rem/1.2 "Outfit", system-ui, sans-serif;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%);
+  transition: opacity 0.2s ease;
+}
+
+.stage.edit-mode .landmark.is-selected .landmark-readout,
+.stage.edit-mode .landmark.is-dragging .landmark-readout {
+  opacity: 1;
+}
+
+/* ——— Masthead — readable over watercolor, no dark pill ——— */
+.masthead {
+  position: absolute;
+  top: max(1.1rem, env(safe-area-inset-top));
+  left: max(1.25rem, env(safe-area-inset-left));
+  z-index: 20;
+  max-width: min(300px, 44vw);
+  padding: 0.65rem 0.95rem 0.75rem;
+  margin: 0;
+  border: none;
+  box-shadow: none;
+  pointer-events: none;
+  color: var(--ink);
+  /* soft frosted strip */
+  background: rgba(255, 250, 240, 0.38);
+  backdrop-filter: blur(10px) saturate(1.05);
+  -webkit-backdrop-filter: blur(10px) saturate(1.05);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.masthead-date {
+  margin: 0;
+  font-family: "Outfit", system-ui, sans-serif;
+  font-size: 0.68rem;
+  font-weight: 400;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  opacity: 0.85;
+  text-shadow: 0 1px 0 rgba(255, 250, 240, 0.8);
+}
+
+.masthead-title {
+  margin: 0.3rem 0 0.12rem;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 400;
+  font-style: italic;
+  font-size: clamp(1.55rem, 3.2vw, 2.15rem);
+  letter-spacing: 0.01em;
+  line-height: 1.05;
+  color: var(--ink);
+  text-shadow: 0 1px 0 rgba(255, 250, 240, 0.9);
+}
+
+.masthead-place {
+  margin: 0;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(0.95rem, 1.6vw, 1.15rem);
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  text-shadow: 0 1px 0 rgba(255, 250, 240, 0.75);
+}
+
+.hint {
+  position: absolute;
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  margin: 0;
+  padding: 0.4rem 0.95rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(22, 28, 36, 0.78);
+  background: rgba(255, 250, 240, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+  white-space: nowrap;
+  text-shadow: 0 1px 0 rgba(255, 250, 240, 0.7);
+}
+
+.hint.is-hidden {
+  opacity: 0;
+}
+
+/* ——— Minimal caption (click secondary) ——— */
+.caption {
+  position: absolute;
+  z-index: 25;
+  max-width: min(320px, 86vw);
+  padding: 1rem 1.25rem 1.1rem;
+  background: var(--chip);
+  color: #f5efe4;
+  border-radius: 14px;
+  border: 1px solid rgba(196, 165, 116, 0.35);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.caption[hidden] {
+  display: none;
+}
+
+.caption-kicker {
+  margin: 0 0 0.2rem;
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.caption-title {
+  margin: 0 0 0.45rem;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-style: italic;
+  font-size: 1.35rem;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+.caption-story {
+  margin: 0;
+  font-weight: 300;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: rgba(245, 239, 228, 0.82);
+}
+
+.caption-close {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.5rem;
+  width: 1.8rem;
+  height: 1.8rem;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: rgba(245, 239, 228, 0.7);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.caption-close:hover {
+  color: #fff;
+}
+
+
+/* ——— Nice Airport detail scene ——— */
+.airport-scene {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+.airport-scene[hidden] {
+  display: none;
+}
+
+.airport-scene-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: rgba(18, 22, 28, 0.42);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.airport-scene-panel {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  margin: max(0.75rem, env(safe-area-inset-top)) max(0.75rem, env(safe-area-inset-right)) max(0.75rem, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left));
+  overflow: hidden;
+  border-radius: 16px;
+  background: #b7d0e0;
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.18) inset;
+  animation: airport-scene-in 0.4s var(--ease);
+}
+
+.airport-scene-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  pointer-events: none;
+  user-select: none;
+  display: block;
+}
+
+.airport-scene-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 70% at 50% 45%, transparent 50%, rgba(22, 28, 36, 0.22) 100%),
+    linear-gradient(180deg, rgba(18, 22, 28, 0.18) 0%, transparent 18%, transparent 78%, rgba(18, 22, 28, 0.2) 100%);
+}
+
+.airport-scene-header {
+  position: absolute;
+  top: max(1.1rem, env(safe-area-inset-top));
+  left: max(1.25rem, env(safe-area-inset-left));
+  z-index: 5;
+  max-width: min(340px, 55vw);
+  padding: 0.7rem 1rem 0.8rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 250, 240, 0.42);
+  backdrop-filter: blur(10px) saturate(1.05);
+  -webkit-backdrop-filter: blur(10px) saturate(1.05);
+  pointer-events: none;
+}
+
+.airport-scene-kicker {
+  margin: 0;
+  font-family: "Outfit", system-ui, sans-serif;
+  font-size: 0.62rem;
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  opacity: 0.88;
+}
+
+.airport-scene-title {
+  margin: 0.25rem 0 0.1rem;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 400;
+  font-style: italic;
+  font-size: clamp(1.55rem, 3.2vw, 2.2rem);
+  letter-spacing: 0.01em;
+  line-height: 1.05;
+  color: var(--ink);
+}
+
+.airport-scene-sub {
+  margin: 0;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(0.9rem, 1.5vw, 1.1rem);
+  letter-spacing: 0.08em;
+  color: var(--gold);
+}
+
+.airport-scene-close {
+  position: absolute;
+  top: max(1rem, env(safe-area-inset-top));
+  right: max(1rem, env(safe-area-inset-right));
+  z-index: 6;
+  width: 2.4rem;
+  height: 2.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 50%;
+  background: rgba(18, 22, 28, 0.55);
+  color: #f5efe4;
+  font-size: 1.45rem;
+  line-height: 1;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.airport-scene-close:hover,
+.airport-scene-close:focus-visible {
+  background: rgba(18, 22, 28, 0.78);
+  transform: scale(1.05);
+  outline: none;
+}
+
+.airport-props {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.airport-prop {
+  position: absolute;
+  display: block;
+  object-fit: contain;
+  pointer-events: auto;
+  user-select: none;
+  cursor: default;
+  filter:
+    drop-shadow(0 0 1px rgba(255, 220, 143, 0.7))
+    drop-shadow(0 0 6px rgba(194, 143, 54, 0.35))
+    drop-shadow(0 10px 16px rgba(20, 30, 40, 0.28));
+  transition: transform 0.35s var(--ease), filter 0.35s var(--ease);
+  will-change: transform, filter;
+}
+
+.airport-prop:hover,
+.airport-prop:focus-visible {
+  animation-play-state: paused;
+  transform: translateY(-10px) scale(1.06);
+  filter:
+    drop-shadow(0 0 1.5px rgba(255, 235, 174, 1))
+    drop-shadow(0 0 10px rgba(225, 177, 77, 0.85))
+    drop-shadow(0 18px 24px rgba(20, 30, 40, 0.35));
+  z-index: 4;
+}
+
+.prop-airplane {
+  width: 14%;
+  left: 62%;
+  top: 3%;
+  animation: airport-bob 9s ease-in-out infinite;
+}
+
+.prop-train {
+  width: 18%;
+  left: 2%;
+  top: 72%;
+  animation: airport-bob 11s ease-in-out infinite 0.5s;
+}
+
+.prop-suv {
+  width: 14%;
+  left: 28%;
+  top: 76%;
+  animation: airport-bob 10s ease-in-out infinite 1.1s;
+}
+
+.prop-suitcases {
+  width: 12%;
+  left: 46%;
+  top: 78%;
+  animation: airport-bob 9.5s ease-in-out infinite 0.8s;
+}
+
+.prop-woven-bag {
+  width: 6.5%;
+  left: 58%;
+  top: 82%;
+  animation: airport-bob 8.5s ease-in-out infinite 1.4s;
+}
+
+.prop-palms {
+  width: 7.5%;
+  left: 88%;
+  top: 42%;
+  animation: airport-bob 10.5s ease-in-out infinite 0.3s;
+}
+
+.prop-lemon {
+  width: 5%;
+  left: 84%;
+  top: 68%;
+  animation: airport-bob 8s ease-in-out infinite 1.7s;
+}
+
+.prop-sailboat {
+  width: 8%;
+  left: 72%;
+  top: 58%;
+  animation: airport-bob 12s ease-in-out infinite 0.9s;
+}
+
+@keyframes airport-bob {
+  0%, 100% { transform: translateY(0) rotate(-0.8deg); }
+  50%      { transform: translateY(-8px) rotate(1.2deg); }
+}
+
+@keyframes airport-scene-in {
+  from { opacity: 0; transform: scale(1.02); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.stage.airport-open .board-controls,
+.stage.airport-open .masthead,
+.stage.airport-open .hint,
+.stage.airport-open .caption {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+@media (max-width: 720px) {
+  .airport-scene-header {
+    max-width: min(220px, 58vw);
+    padding: 0.55rem 0.8rem 0.6rem;
+  }
+
+  .airport-scene-title {
+    font-size: 1.4rem;
+  }
+
+  .prop-airplane { width: 22%; }
+  .prop-train { width: 26%; top: 54%; }
+  .prop-suv { width: 20%; }
+  .prop-suitcases { width: 18%; }
+  .prop-woven-bag { width: 9%; }
+  .prop-palms { width: 10%; }
+  .prop-lemon { width: 7%; }
+  .prop-sailboat { width: 12%; }
+}
+
+@media (max-width: 720px) {
+  .board-controls {
+    top: auto;
+    right: 0.6rem;
+    bottom: max(0.65rem, env(safe-area-inset-bottom));
+    left: 0.6rem;
+    justify-content: center;
+  }
+
+  .masthead {
+    max-width: min(210px, 56vw);
+    padding: 0.5rem 0.75rem 0.55rem;
+  }
+
+  .masthead-title {
+    font-size: 1.35rem;
+  }
+
+  .landmark-label {
+    font-size: 0.78rem;
+  }
+
+  .caption {
+    left: 50% !important;
+    right: auto !important;
+    bottom: max(3.5rem, env(safe-area-inset-bottom));
+    top: auto !important;
+    transform: translateX(-50%);
+    max-width: min(340px, 92vw);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .float,
+  .landmark:hover img,
+  .landmark:focus-visible img,
+  .landmark.is-open img,
+  .airport-prop,
+  .airport-scene-panel {
+    animation: none !important;
+  }
+
+  .landmark {
+    transition: none;
+  }
+}

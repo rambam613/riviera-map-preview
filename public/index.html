@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Côte d'Azur · Eva & Josh</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css?v=panorama11" />
+</head>
+<body>
+  <div class="stage" id="stage">
+    <img class="stage-base" src="assets/panorama-base.png" alt="" draggable="false" />
+    <div class="stage-vignette" aria-hidden="true"></div>
+
+    <div class="board-controls" aria-label="Map preview controls">
+      <button class="control-button" id="editToggle" type="button" aria-pressed="true">
+        <span>Edit positions</span>
+        <span class="control-status" id="editStatus">On</span>
+      </button>
+      <button class="control-button control-button--secondary" id="copyLayout" type="button">
+        Copy layout
+      </button>
+    </div>
+
+    <header class="masthead">
+      <p class="masthead-date">19 September 2027</p>
+      <h1 class="masthead-title">Eva &amp; Josh</h1>
+      <p class="masthead-place">Côte d&rsquo;Azur</p>
+    </header>
+
+    <!--
+      Sprite board — positions are % of .board (left/top of each .landmark).
+      Tweak LAYOUT in app.js or the data-left / data-top attributes below.
+      Order left→right: Cannes cluster · Palm Beach (primary) · Antibes · Nice Airport · Nice
+      JW sits near Cannes; Saint-Émilion floats as a vignette.
+      Airport travel stickers live in #airportScene, not on the home board.
+    -->
+    <div class="board" id="board">
+      <!-- Ambient sprites (decorative) — coast ambience only -->
+      <div class="ambient" aria-hidden="true">
+        <img class="float plane" src="assets/plane.png" alt="" draggable="false" />
+        <img class="float yacht" src="assets/yacht.png" alt="" draggable="false" />
+        <img class="float sailboat sailboat-a" src="assets/sailboat-a.png" alt="" draggable="false" />
+        <img class="float sailboat sailboat-b" src="assets/sailboat-b.png" alt="" draggable="false" />
+        <img class="float gull gull-1" src="assets/seagull-1.png" alt="" draggable="false" />
+        <img class="float gull gull-2" src="assets/seagull-2.png" alt="" draggable="false" />
+        <img class="float gull gull-3" src="assets/seagull-3.png" alt="" draggable="false" />
+        <img class="float gull gull-4" src="assets/seagull-4.png" alt="" draggable="false" />
+        <img class="float gull gull-5" src="assets/seagull-5.png" alt="" draggable="false" />
+      </div>
+
+      <!-- Landmark stickers -->
+      <button
+        class="landmark"
+        type="button"
+        data-id="cannes"
+        data-left="0"
+        data-top="58"
+        data-w="13"
+        aria-label="Cannes"
+      >
+        <img src="assets/cannes.png" alt="" draggable="false" />
+        <span class="landmark-label">Cannes</span>
+      </button>
+
+      <button
+        class="landmark landmark--jw"
+        type="button"
+        data-id="jw-marriott"
+        data-left="0"
+        data-top="38"
+        data-w="11"
+        aria-label="JW Marriott"
+      >
+        <img src="assets/jw-marriott.png" alt="" draggable="false" />
+        <span class="landmark-label">JW Marriott</span>
+      </button>
+
+      <button
+        class="landmark landmark--primary"
+        type="button"
+        data-id="palm-beach"
+        data-left="4"
+        data-top="52"
+        data-w="16"
+        aria-label="Palm Beach Cannes"
+      >
+        <img src="assets/palm-beach.png" alt="" draggable="false" />
+        <span class="landmark-label">Palm Beach</span>
+      </button>
+
+      <button
+        class="landmark"
+        type="button"
+        data-id="antibes"
+        data-left="45"
+        data-top="40"
+        data-w="16"
+        aria-label="Antibes"
+      >
+        <img src="assets/antibes.png" alt="" draggable="false" />
+        <span class="landmark-label">Antibes</span>
+      </button>
+
+      <button
+        class="landmark"
+        type="button"
+        data-id="nice"
+        data-left="78"
+        data-top="20"
+        data-w="18"
+        aria-label="Nice"
+      >
+        <img src="assets/nice.png" alt="" draggable="false" />
+        <span class="landmark-label">Nice</span>
+      </button>
+
+      <button
+        class="landmark"
+        type="button"
+        data-id="nice-airport"
+        data-left="74"
+        data-top="34"
+        data-w="14"
+        aria-label="Nice Airport"
+      >
+        <img src="assets/nice-airport.png" alt="" draggable="false" />
+        <span class="landmark-label">Nice Airport</span>
+      </button>
+
+      <button
+        class="landmark landmark--vignette"
+        type="button"
+        data-id="saint-emilion"
+        data-left="27"
+        data-top="72"
+        data-w="10"
+        aria-label="Saint-Émilion"
+      >
+        <img src="assets/saint-emilion.png" alt="" draggable="false" />
+        <span class="landmark-label">Saint-Émilion</span>
+      </button>
+    </div>
+
+    <!-- Minimal live position readouts are added to stickers by app.js. -->
+
+    <!-- Minimal caption that appears near a clicked sticker -->
+    <div class="caption" id="caption" hidden role="status">
+      <p class="caption-kicker" id="captionKicker"></p>
+      <p class="caption-title" id="captionTitle"></p>
+      <p class="caption-story" id="captionStory"></p>
+      <button class="caption-close" id="captionClose" type="button" aria-label="Close">×</button>
+    </div>
+
+    <p class="hint" id="hint">Hover a place — click for a note</p>
+
+    <!-- Nice Airport detail scene (opened from Nice / Nice Airport landmarks) -->
+    <div
+      class="airport-scene"
+      id="airportScene"
+      hidden
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="airportSceneTitle"
+    >
+      <button class="airport-scene-backdrop" id="airportSceneBackdrop" type="button" aria-label="Close airport scene"></button>
+      <div class="airport-scene-panel">
+        <img
+          class="airport-scene-bg"
+          src="assets/nice-airport-scene.png"
+          alt=""
+          draggable="false"
+        />
+        <div class="airport-scene-vignette" aria-hidden="true"></div>
+
+        <header class="airport-scene-header">
+          <p class="airport-scene-kicker">Arrivals · Côte d&rsquo;Azur</p>
+          <h2 class="airport-scene-title" id="airportSceneTitle">Nice Airport</h2>
+          <p class="airport-scene-sub">Touch down by the sea</p>
+        </header>
+
+        <button class="airport-scene-close" id="airportSceneClose" type="button" aria-label="Close">×</button>
+
+        <div class="airport-props" aria-hidden="true">
+          <img class="airport-prop prop-airplane" src="assets/airplane.png" alt="" draggable="false" title="Airplane" />
+          <img class="airport-prop prop-train" src="assets/train.png" alt="" draggable="false" title="Train" />
+          <img class="airport-prop prop-suv" src="assets/suv.png" alt="" draggable="false" title="SUV" />
+          <img class="airport-prop prop-suitcases" src="assets/suitcases.png" alt="" draggable="false" title="Suitcases" />
+          <img class="airport-prop prop-woven-bag" src="assets/woven-bag.png" alt="" draggable="false" title="Woven bag" />
+          <img class="airport-prop prop-palms" src="assets/palms.png" alt="" draggable="false" title="Palms" />
+          <img class="airport-prop prop-lemon" src="assets/lemon.png" alt="" draggable="false" title="Lemon" />
+          <img class="airport-prop prop-sailboat" src="assets/sailboat-airport.png" alt="" draggable="false" title="Sailboat" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js?v=panorama11"></script>
+</body>
+</html>

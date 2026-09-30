@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+node_modules/
+_archive_excluded/
+shot-*.png
+shot-*.jpg
+*-preview.jpg
+composite-*.jpg
+crop-*.jpg
+geo-grid.jpg
+map-preview.jpg
+propose-v1.jpg
+thumb-*.jpg
+antibes-zoom-grid.jpg
