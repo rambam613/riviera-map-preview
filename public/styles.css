@@ -609,13 +609,37 @@ body {
   animation: airport-scene-in 0.4s var(--ease);
 }
 
+/* Stage = the painting's own coordinate frame (1672×941), sized like
+   object-fit: cover and anchored by --fx/--fy (0 = left/top, 1 = right/bottom).
+   #airportProps fills it, so prop % positions are % of the painting. */
+.airport-scene-panel {
+  container-type: size;
+}
+
+.airport-stage {
+  --ar: 1.7768;
+  --fx: 0.5;
+  --fy: 0.5;
+  --stage-w: max(100cqw, calc(100cqh * var(--ar)));
+  --stage-h: max(100cqh, calc(100cqw / var(--ar)));
+  position: absolute;
+  width: var(--stage-w);
+  height: var(--stage-h);
+  left: calc((100cqw - var(--stage-w)) * var(--fx));
+  top: calc((100cqh - var(--stage-h)) * var(--fy));
+}
+
+/* Portrait panels show ≈ x39–64% of the painting: terminal edge → runway → viaduct.
+   Must match PORTRAIT_QUERY in app.js. */
+@media (max-width: 720px), (max-aspect-ratio: 1/1) {
+  .airport-stage { --fx: 0.52; }
+}
+
 .airport-scene-bg {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center center;
   pointer-events: none;
   user-select: none;
   display: block;
@@ -994,9 +1018,16 @@ body {
 .remove-handle:hover { background: #b3382c; }
 
 .airport-prop img { display: block; width: 100%; height: auto; pointer-events: none; user-select: none; }
-.airport-prop[data-prop="train"] { animation-duration: 11s; animation-delay: 0.5s; }
-.airport-prop[data-prop="suv"] { animation-duration: 9.5s; animation-delay: 1.1s; }
-.airport-prop[data-prop="suitcases"] { animation-duration: 8.5s; animation-delay: 0.8s; }
+/* Grounded props: match the slope of the painted rails / road, and only a 2px bob
+   so they never look like they float off the ground. */
+.airport-prop[data-prop="train"] { rotate: -4deg; animation-name: airport-bob-sm; animation-duration: 11s; animation-delay: 0.5s; }
+.airport-prop[data-prop="suv"] { rotate: -8deg; animation-name: airport-bob-sm; animation-duration: 9.5s; animation-delay: 1.1s; }
+.airport-prop[data-prop="suitcases"] { animation-name: airport-bob-sm; animation-duration: 8.5s; animation-delay: 0.8s; }
+.airport-prop[data-prop="train-men"] { animation-name: airport-bob-sm; }
+@keyframes airport-bob-sm {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-2px); }
+}
 .stage.edit-mode .airport-prop { animation: none; cursor: grab; outline: 1px dashed rgba(184, 146, 90, 0.8); }
 .stage.edit-mode .airport-prop .remove-handle,
 .stage.edit-mode .airport-prop .resize-handle { display: block; }

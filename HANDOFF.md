@@ -5,7 +5,7 @@
 **Couple:** Eva Lash & Josh Danial · wedding **19 September 2027** · Palm Beach Cannes (Espace Alain Delon)  
 **Local path (Grok box):** `/workspace/riviera-map-preview/`  
 **Run:** `node server.js` → **http://127.0.0.1:3850**  
-**Cache-bust:** `?v=panorama11` on CSS/JS/asset links  
+**Cache-bust:** `?v=airport2` on CSS/JS (live was `airport1`); landmark PNGs `?v=orig2`, airport props `?v=recut1`  
 
 ---
 
@@ -52,7 +52,7 @@
 - `setPos(id, left, top, w)` → nudge one landmark
 
 ### Open airport scene
-`AIRPORT_SCENE_IDS = {"nice", "nice-airport"}` when edit mode is off. Close: X, Escape, backdrop.
+`AIRPORT_SCENE_IDS = {"nice-airport"}` (the standalone `nice` landmark is gone on live). Close: X, Escape, backdrop.
 
 ---
 
@@ -182,3 +182,11 @@ Venue notes (context only): July Nolaan ~€30k + VAT hire vs Sept devis €70k 
 2. Polish airport prop placement / optional captions inside scene.
 3. Wire remaining narrative panels for other cities the same pattern as Nice Airport if desired.
 4. Deploy (GitHub Pages / static host) when layout is locked.
+
+
+## airport-layout-v2 (built on the live jeva.life snapshot)
+- **Owner-only editing:** controls (Edit positions, Copy layout, Airport scene, Restore removed) are hidden unless the URL has `?edit=1`; that sets `localStorage["riviera-edit"]="1"` so it sticks, `?edit=0` clears it. Edit mode always starts **Off**; guests can't turn it on (even via console), so clicking Nice Airport opens the scene.
+- **Airport props pinned to the painting:** `.airport-stage` (inside `.airport-scene-panel`, `container-type: size`) is a 1672×941 box sized like `object-fit: cover`; bg + `#airportProps` live inside it, so prop left/top/w are % of the painting. `--fx: .52` on portrait / ≤720px panels (shows ≈ x39–64%).
+- `PROP_LAYOUT` in app.js has `landscape` and `portrait` sets (switch via the same media query). Saved edits go to `localStorage["riviera-airport-v2"]` per orientation (old `-v1` panel-% saves are ignored; they used a different coordinate frame).
+- Train on the painted rails (rotate −4°), SUV on the viaduct road (rotate −8°), suitcases on the apron; grounded props use a 2px `airport-bob-sm`.
+- `train-men` is kept in the markup but `hidden: true` by default (close-up vignette, out of scale with the scene); owner can bring it back with Restore removed.

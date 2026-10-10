@@ -8,7 +8,7 @@ Interactive Côte d’Azur wedding invitation map for **Eva Lash & Josh Danial**
 node server.js
 ```
 
-Open **http://127.0.0.1:3850** (cache-bust `?v=panorama11`).
+Open **http://127.0.0.1:3850** (cache-bust `?v=airport2`; add `?edit=1` once for the owner editing controls, `?edit=0` to hide them).
 
 ## Full handoff (assets + data)
 

@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=airport1" />
+  <link rel="stylesheet" href="styles.css?v=airport2" />
 </head>
 <body>
   <div class="stage" id="stage">
@@ -121,10 +121,10 @@
     </div><!-- /world -->
     <div class="stage-vignette" aria-hidden="true"></div>
 
-    <div class="board-controls" id="boardControls" aria-label="Map preview controls">
-      <button class="control-button" id="editToggle" type="button" aria-pressed="true">
+    <div class="board-controls" id="boardControls" aria-label="Map preview controls" hidden>
+      <button class="control-button" id="editToggle" type="button" aria-pressed="false">
         <span>Edit positions</span>
-        <span class="control-status" id="editStatus">On</span>
+        <span class="control-status" id="editStatus">Off</span>
       </button>
       <button class="control-button control-button--secondary" id="copyLayout" type="button">
         Copy layout
@@ -180,12 +180,22 @@
     >
       <button class="airport-scene-backdrop" id="airportSceneBackdrop" type="button" aria-label="Close airport scene"></button>
       <div class="airport-scene-panel">
-        <img
-          class="airport-scene-bg"
-          src="assets/nice-airport-scene.png"
-          alt=""
-          draggable="false"
-        />
+        <!-- Stage keeps the painting's 1672×941 aspect and covers the panel, so prop
+             positions (% of #airportProps) are % of the painting and stay glued to it. -->
+        <div class="airport-stage">
+          <img
+            class="airport-scene-bg"
+            src="assets/nice-airport-scene.png"
+            alt=""
+            draggable="false"
+          />
+          <div class="airport-props" id="airportProps">
+            <div class="airport-prop" data-prop="train-men"><img src="assets/train-men.png?v=recut1" alt="Friends waving from the train" draggable="false" /></div>
+            <div class="airport-prop" data-prop="train"><img src="assets/train.png?v=recut1" alt="Riviera train" draggable="false" /></div>
+            <div class="airport-prop" data-prop="suv"><img src="assets/suv.png?v=recut1" alt="Car to Cannes" draggable="false" /></div>
+            <div class="airport-prop" data-prop="suitcases"><img src="assets/suitcases.png?v=recut1" alt="Suitcases" draggable="false" /></div>
+          </div>
+        </div>
         <div class="airport-scene-vignette" aria-hidden="true"></div>
 
         <header class="airport-scene-header">
@@ -196,16 +206,10 @@
 
         <button class="airport-scene-close" id="airportSceneClose" type="button" aria-label="Close">×</button>
 
-        <div class="airport-props" id="airportProps">
-          <div class="airport-prop" data-prop="train-men"><img src="assets/train-men.png?v=recut1" alt="Friends waving from the train" draggable="false" /></div>
-          <div class="airport-prop" data-prop="train"><img src="assets/train.png?v=recut1" alt="Riviera train" draggable="false" /></div>
-          <div class="airport-prop" data-prop="suv"><img src="assets/suv.png?v=recut1" alt="Car to Cannes" draggable="false" /></div>
-          <div class="airport-prop" data-prop="suitcases"><img src="assets/suitcases.png?v=recut1" alt="Suitcases" draggable="false" /></div>
-        </div>
       </div>
     </div>
   </div>
 
-  <script src="app.js?v=airport1"></script>
+  <script src="app.js?v=airport2"></script>
 </body>
 </html>

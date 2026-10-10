@@ -225,7 +225,7 @@ function applyLayout(layout = currentLayout) {
 }
 
 function setEditMode(next) {
-  editMode = Boolean(next);
+  editMode = Boolean(next) && isOwner;
   stage.classList.toggle("edit-mode", editMode);
   editToggle.setAttribute("aria-pressed", String(editMode));
   editStatus.textContent = editMode ? "On" : "Off";
@@ -469,7 +469,7 @@ restoreRemovedButton.addEventListener("click", (e) => {
   Object.keys(currentLayout).forEach((id) => delete currentLayout[id].hidden);
   applyLayout(currentLayout);
   saveLayout();
-  Object.values(propLayout).forEach((pos) => delete pos.hidden);
+  Object.values(propLayouts).forEach((layout) => Object.values(layout).forEach((pos) => delete pos.hidden));
   applyProps();
   saveProps();
   syncRestoreButton();
@@ -505,23 +505,49 @@ window.addEventListener("resize", () => {
 ensurePositionReadouts();
 const savedLayout = readSavedLayout();
 applyLayout(savedLayout ? { ...getBaseLayout(), ...savedLayout } : getBaseLayout());
-/* ---- Airport scene props: same move / resize / × editing as the map icons (% of the scene panel) ---- */
-const PROP_KEY = "riviera-airport-v1";
+/* ---- Airport scene props: same move / resize / × editing as the map icons ----
+   Positions are % of #airportProps, which fills .airport-stage — a box with the
+   painting's own 1672×941 aspect that covers the panel. So left/top/w are % of the
+   PAINTING and stay glued to it on any screen. Landscape and portrait screens frame
+   the painting differently (portrait shows ≈ x39–64%), so each has its own layout.
+   Painting map: sky y0–48 · terminal x7–40 y50–61 · apron y61–68 · runway x40–72 y57–62 ·
+   viaduct road (30,76)→(65,64) · rail line (36,86)→(65,76) · bay x62–92 y58–84 ·
+   foreground foliage y>82. */
+const PROP_KEY = "riviera-airport-v2";
+const PORTRAIT_QUERY = window.matchMedia("(max-width: 720px), (max-aspect-ratio: 1/1)");
 const PROP_LAYOUT = {
-  "train-men": { left: 2, top: 56, w: 30 },
-  train:       { left: 36, top: 70, w: 17 },
-  suv:         { left: 58, top: 74, w: 22 },
-  suitcases:   { left: 82, top: 66, w: 15 },
+  landscape: {
+    // Close-up vignette: too big to sit in the scene, so off by default (Restore removed brings it back).
+    "train-men": { left: 1,    top: 80.6, w: 22, hidden: true },
+    train:       { left: 50.6, top: 72.2, w: 12.8 },  // on the painted rails, over the small painted train
+    suv:         { left: 39.6, top: 72.0, w: 5.2 },   // on the viaduct road, angled with it
+    suitcases:   { left: 34.2, top: 59.6, w: 5.4 },   // open apron by the jet bridges, clear of the palms
+  },
+  portrait: {
+    "train-men": { left: 39.5, top: 88.4, w: 13, hidden: true },
+    train:       { left: 50.6, top: 72.2, w: 12.8 },
+    suv:         { left: 40.8, top: 71.2, w: 4.4 },
+    suitcases:   { left: 44.2, top: 62.4, w: 5.4 },
+  },
 };
 const airportProps = document.getElementById("airportProps");
 const props = Array.from(document.querySelectorAll(".airport-prop"));
-let propLayout = JSON.parse(JSON.stringify(PROP_LAYOUT));
+const propLayouts = JSON.parse(JSON.stringify(PROP_LAYOUT));
 try {
   const saved = JSON.parse(localStorage.getItem(PROP_KEY) || "null");
-  if (saved) Object.keys(propLayout).forEach((id) => { if (saved[id]) propLayout[id] = saved[id]; });
+  if (saved) {
+    Object.keys(propLayouts).forEach((mode) => {
+      Object.keys(propLayouts[mode]).forEach((id) => {
+        if (saved[mode]?.[id]) propLayouts[mode][id] = saved[mode][id];
+      });
+    });
+  }
 } catch (error) { /* private mode: defaults */ }
+const propOrientation = () => (PORTRAIT_QUERY.matches ? "portrait" : "landscape");
+let propLayout = propLayouts[propOrientation()];
 
 function applyProps() {
+  propLayout = propLayouts[propOrientation()];
   props.forEach((el) => {
     const pos = propLayout[el.dataset.prop];
     el.style.left = `${pos.left}%`;
@@ -532,8 +558,10 @@ function applyProps() {
 }
 
 function saveProps() {
-  try { localStorage.setItem(PROP_KEY, JSON.stringify(propLayout)); } catch (error) { /* ignore */ }
+  try { localStorage.setItem(PROP_KEY, JSON.stringify(propLayouts)); } catch (error) { /* ignore */ }
 }
+
+PORTRAIT_QUERY.addEventListener?.("change", () => { applyProps(); syncRestoreButton(); });
 
 let propDrag = null;
 props.forEach((el) => {
@@ -587,17 +615,35 @@ document.getElementById("openAirport").addEventListener("click", (e) => {
   openAirportScene();
 });
 
-setEditMode(true);
+/* Editing controls are for the owner only. ?edit=1 turns them on (remembered in
+   localStorage so it sticks), ?edit=0 clears it. Guests never see them and edit
+   mode always starts Off, so a click on Nice Airport opens the scene. */
+const OWNER_KEY = "riviera-edit";
+const isOwner = (() => {
+  try {
+    const flag = new URLSearchParams(window.location.search).get("edit");
+    if (flag === "1") localStorage.setItem(OWNER_KEY, "1");
+    else if (flag === "0") localStorage.removeItem(OWNER_KEY);
+    return localStorage.getItem(OWNER_KEY) === "1";
+  } catch (error) {
+    return new URLSearchParams(window.location.search).get("edit") === "1";
+  }
+})();
+const boardControls = document.getElementById("boardControls");
+if (boardControls) boardControls.hidden = !isOwner;
+stage.classList.toggle("is-owner", isOwner);
+
+setEditMode(false);
 syncRestoreButton();
 hintTimer = setTimeout(() => hint && hint.classList.add("is-hidden"), 7000);
 
 function exportLayout() {
   const layout = getLayout();
-  const json = JSON.stringify({ ...layout, airportScene: propLayout }, null, 2);
+  const json = JSON.stringify({ ...layout, airportScene: propLayouts }, null, 2);
   const table = Object.entries(layout)
     .map(([id, pos]) => `${id}\t${pos.left}\t${pos.top}\t${pos.w}`)
     .join("\n");
-  const snippet = `const LAYOUT = ${json};\nconst PROP_LAYOUT = ${JSON.stringify(propLayout, null, 2)};`;
+  const snippet = `const LAYOUT = ${json};\nconst PROP_LAYOUT = ${JSON.stringify(propLayouts, null, 2)};`;
   console.info("Riviera layout table (id\tleft\ttop\tw):\n" + table);
   console.info("Riviera LAYOUT snippet:\n" + snippet);
 
