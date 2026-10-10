@@ -5,7 +5,7 @@ const MIN_LANDMARK_WIDTH = 6;
 const MAX_LANDMARK_WIDTH = 40;
 
 /** Landmarks that open the Nice Airport detail scene instead of the caption. */
-const AIRPORT_SCENE_IDS = new Set(["nice", "nice-airport"]);
+const AIRPORT_SCENE_IDS = new Set(["nice-airport"]);
 
 /** Default layout (% of .board). */
 const LAYOUT = {
@@ -14,7 +14,6 @@ const LAYOUT = {
   "palm-beach":     { left: 4,  top: 52, w: 16 },
   antibes:          { left: 45, top: 40, w: 16 },
   "nice-airport":   { left: 74, top: 34, w: 14 },
-  nice:             { left: 78, top: 20, w: 18 },
   "saint-emilion":  { left: 27, top: 72, w: 10 },
 };
 
@@ -49,12 +48,6 @@ const PLACES = {
     story:
       "Touch down by the sea — palms at the terminal, the mountains behind, and the short ride into Nice beginning just beyond the runway.",
   },
-  nice: {
-    title: "Nice",
-    kicker: "Promenade & arrival",
-    story:
-      "The Baie des Anges below terracotta roofs. Guests drift in from the airport and watch the light turn gold over the Promenade.",
-  },
   "saint-emilion": {
     title: "Saint-Émilion",
     kicker: "Guest weekend vignette",
@@ -74,6 +67,7 @@ const hint = document.getElementById("hint");
 const editToggle = document.getElementById("editToggle");
 const editStatus = document.getElementById("editStatus");
 const copyLayoutButton = document.getElementById("copyLayout");
+const restoreRemovedButton = document.getElementById("restoreRemoved");
 const landmarks = Array.from(document.querySelectorAll(".landmark"));
 const airportScene = document.getElementById("airportScene");
 const airportSceneClose = document.getElementById("airportSceneClose");
@@ -103,6 +97,7 @@ function cloneLayout(layout) {
       left: numberOr(pos.left, 0),
       top: numberOr(pos.top, 0),
       w: numberOr(pos.w, 18),
+      ...(pos.hidden ? { hidden: true } : {}),
     }]),
   );
 }
@@ -120,7 +115,7 @@ function readSavedLayout() {
       const top = Number(pos.top);
       const w = Number(pos.w);
       if ([left, top, w].every(Number.isFinite)) {
-        result[el.dataset.id] = { left, top, w };
+        result[el.dataset.id] = { left, top, w, ...(pos.hidden ? { hidden: true } : {}) };
       } else if (fallback.left != null && fallback.top != null && fallback.w != null) {
         result[el.dataset.id] = { ...fallback };
       }
@@ -155,6 +150,7 @@ function getLayout() {
       left: round(numberOr(pos.left, parseFloat(el.style.left) || 0)),
       top: round(numberOr(pos.top, parseFloat(el.style.top) || 0)),
       w: round(numberOr(pos.w, parseFloat(getComputedStyle(el).getPropertyValue("--w")) || 18)),
+      ...(pos.hidden ? { hidden: true } : {}),
     };
   });
   return result;
@@ -192,6 +188,14 @@ function ensurePositionReadouts() {
       readout.setAttribute("aria-hidden", "true");
       el.appendChild(readout);
     }
+    if (!el.querySelector(".remove-handle")) {
+      const remove = document.createElement("span");
+      remove.className = "remove-handle";
+      remove.setAttribute("aria-hidden", "true");
+      remove.title = "Remove from map";
+      remove.textContent = "×";
+      el.appendChild(remove);
+    }
     if (!el.querySelector(".resize-handle")) {
       const handle = document.createElement("span");
       handle.className = "resize-handle";
@@ -214,6 +218,7 @@ function applyLayout(layout = currentLayout) {
     el.style.left = `${pos.left}%`;
     el.style.top = `${pos.top}%`;
     el.style.setProperty("--w", `${pos.w}%`);
+    el.hidden = Boolean(pos.hidden);
     updatePositionReadout(el);
     positionResizeHandle(el);
   });
@@ -280,7 +285,7 @@ function closeCaption() {
 }
 
 function openAirportScene() {
-  if (editMode || !airportScene) return;
+  if (!airportScene) return;
   closeCaption();
   airportOpen = true;
   airportScene.hidden = false;
@@ -303,6 +308,23 @@ function closeAirportScene() {
   landmarks.forEach((el) => {
     if (AIRPORT_SCENE_IDS.has(el.dataset.id)) el.classList.remove("is-open");
   });
+}
+
+function setHidden(id, hidden) {
+  const pos = currentLayout[id];
+  if (!pos) return;
+  if (hidden) pos.hidden = true;
+  else delete pos.hidden;
+  applyLayout(currentLayout);
+  saveLayout();
+  syncRestoreButton();
+}
+
+function syncRestoreButton() {
+  const n = Object.values(currentLayout).filter((pos) => pos.hidden).length
+    + Object.values(propLayout).filter((pos) => pos.hidden).length;
+  restoreRemovedButton.hidden = n === 0;
+  restoreRemovedButton.textContent = `Restore removed (${n})`;
 }
 
 function updateDragPosition(e) {
@@ -363,6 +385,10 @@ landmarks.forEach((el) => {
     closeCaption();
     closeAirportScene();
     landmarks.forEach((landmark) => landmark.classList.remove("is-selected"));
+    if (e.target.closest?.(".remove-handle")) {
+      setHidden(el.dataset.id, true);
+      return;
+    }
     const resizeHandle = e.target.closest?.(".resize-handle");
     const rect = el.getBoundingClientRect();
     if (resizeHandle) {
@@ -438,6 +464,17 @@ editToggle.addEventListener("click", (e) => {
   setEditMode(!editMode);
 });
 
+restoreRemovedButton.addEventListener("click", (e) => {
+  e.stopPropagation();
+  Object.keys(currentLayout).forEach((id) => delete currentLayout[id].hidden);
+  applyLayout(currentLayout);
+  saveLayout();
+  Object.values(propLayout).forEach((pos) => delete pos.hidden);
+  applyProps();
+  saveProps();
+  syncRestoreButton();
+});
+
 copyLayoutButton.addEventListener("click", (e) => {
   e.stopPropagation();
   window.RivieraBoard.exportLayout();
@@ -468,16 +505,99 @@ window.addEventListener("resize", () => {
 ensurePositionReadouts();
 const savedLayout = readSavedLayout();
 applyLayout(savedLayout ? { ...getBaseLayout(), ...savedLayout } : getBaseLayout());
+/* ---- Airport scene props: same move / resize / × editing as the map icons (% of the scene panel) ---- */
+const PROP_KEY = "riviera-airport-v1";
+const PROP_LAYOUT = {
+  "train-men": { left: 2, top: 56, w: 30 },
+  train:       { left: 36, top: 70, w: 17 },
+  suv:         { left: 58, top: 74, w: 22 },
+  suitcases:   { left: 82, top: 66, w: 15 },
+};
+const airportProps = document.getElementById("airportProps");
+const props = Array.from(document.querySelectorAll(".airport-prop"));
+let propLayout = JSON.parse(JSON.stringify(PROP_LAYOUT));
+try {
+  const saved = JSON.parse(localStorage.getItem(PROP_KEY) || "null");
+  if (saved) Object.keys(propLayout).forEach((id) => { if (saved[id]) propLayout[id] = saved[id]; });
+} catch (error) { /* private mode: defaults */ }
+
+function applyProps() {
+  props.forEach((el) => {
+    const pos = propLayout[el.dataset.prop];
+    el.style.left = `${pos.left}%`;
+    el.style.top = `${pos.top}%`;
+    el.style.setProperty("--w", `${pos.w}%`);
+    el.hidden = Boolean(pos.hidden);
+  });
+}
+
+function saveProps() {
+  try { localStorage.setItem(PROP_KEY, JSON.stringify(propLayout)); } catch (error) { /* ignore */ }
+}
+
+let propDrag = null;
+props.forEach((el) => {
+  ["remove-handle", "resize-handle"].forEach((cls) => {
+    const span = document.createElement("span");
+    span.className = cls;
+    span.setAttribute("aria-hidden", "true");
+    if (cls === "remove-handle") span.textContent = "×";
+    el.appendChild(span);
+  });
+  el.addEventListener("pointerdown", (e) => {
+    if (!editMode || e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const pos = propLayout[el.dataset.prop];
+    if (e.target.closest(".remove-handle")) {
+      pos.hidden = true;
+      applyProps();
+      saveProps();
+      syncRestoreButton();
+      return;
+    }
+    const r = el.getBoundingClientRect();
+    propDrag = {
+      el, pos, pointerId: e.pointerId,
+      mode: e.target.closest(".resize-handle") ? "resize" : "move",
+      offsetX: e.clientX - r.left, offsetY: e.clientY - r.top, startX: e.clientX, startW: pos.w,
+    };
+    el.setPointerCapture?.(e.pointerId);
+  });
+  el.addEventListener("pointermove", (e) => {
+    if (!propDrag || propDrag.el !== el || e.pointerId !== propDrag.pointerId) return;
+    const box = airportProps.getBoundingClientRect();
+    const { pos } = propDrag;
+    if (propDrag.mode === "resize") {
+      pos.w = round(Math.min(80, Math.max(4, propDrag.startW + ((e.clientX - propDrag.startX) / box.width) * 100)));
+    } else {
+      pos.left = round(((e.clientX - box.left - propDrag.offsetX) / box.width) * 100);
+      pos.top = round(((e.clientY - box.top - propDrag.offsetY) / box.height) * 100);
+    }
+    applyProps();
+  });
+  const end = () => { if (propDrag?.el === el) { propDrag = null; saveProps(); } };
+  el.addEventListener("pointerup", end);
+  el.addEventListener("pointercancel", end);
+});
+applyProps();
+
+document.getElementById("openAirport").addEventListener("click", (e) => {
+  e.stopPropagation();
+  openAirportScene();
+});
+
 setEditMode(true);
+syncRestoreButton();
 hintTimer = setTimeout(() => hint && hint.classList.add("is-hidden"), 7000);
 
 function exportLayout() {
   const layout = getLayout();
-  const json = JSON.stringify(layout, null, 2);
+  const json = JSON.stringify({ ...layout, airportScene: propLayout }, null, 2);
   const table = Object.entries(layout)
     .map(([id, pos]) => `${id}\t${pos.left}\t${pos.top}\t${pos.w}`)
     .join("\n");
-  const snippet = `const LAYOUT = ${json};`;
+  const snippet = `const LAYOUT = ${json};\nconst PROP_LAYOUT = ${JSON.stringify(propLayout, null, 2)};`;
   console.info("Riviera layout table (id\tleft\ttop\tw):\n" + table);
   console.info("Riviera LAYOUT snippet:\n" + snippet);
 

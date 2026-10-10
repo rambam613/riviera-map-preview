@@ -7,28 +7,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=panorama11" />
+  <link rel="stylesheet" href="styles.css?v=airport1" />
 </head>
 <body>
   <div class="stage" id="stage">
+    <div class="world" id="world">
     <img class="stage-base" src="assets/panorama-base.png" alt="" draggable="false" />
-    <div class="stage-vignette" aria-hidden="true"></div>
-
-    <div class="board-controls" aria-label="Map preview controls">
-      <button class="control-button" id="editToggle" type="button" aria-pressed="true">
-        <span>Edit positions</span>
-        <span class="control-status" id="editStatus">On</span>
-      </button>
-      <button class="control-button control-button--secondary" id="copyLayout" type="button">
-        Copy layout
-      </button>
-    </div>
-
-    <header class="masthead">
-      <p class="masthead-date">19 September 2027</p>
-      <h1 class="masthead-title">Eva &amp; Josh</h1>
-      <p class="masthead-place">Côte d&rsquo;Azur</p>
-    </header>
 
     <!--
       Sprite board — positions are % of .board (left/top of each .landmark).
@@ -61,7 +45,7 @@
         data-w="13"
         aria-label="Cannes"
       >
-        <img src="assets/cannes.png" alt="" draggable="false" />
+        <img src="assets/cannes.png?v=orig2" alt="" draggable="false" />
         <span class="landmark-label">Cannes</span>
       </button>
 
@@ -74,7 +58,7 @@
         data-w="11"
         aria-label="JW Marriott"
       >
-        <img src="assets/jw-marriott.png" alt="" draggable="false" />
+        <img src="assets/jw-marriott.png?v=orig2" alt="" draggable="false" />
         <span class="landmark-label">JW Marriott</span>
       </button>
 
@@ -87,7 +71,7 @@
         data-w="16"
         aria-label="Palm Beach Cannes"
       >
-        <img src="assets/palm-beach.png" alt="" draggable="false" />
+        <img src="assets/palm-beach.png?v=orig2" alt="" draggable="false" />
         <span class="landmark-label">Palm Beach</span>
       </button>
 
@@ -100,21 +84,8 @@
         data-w="16"
         aria-label="Antibes"
       >
-        <img src="assets/antibes.png" alt="" draggable="false" />
+        <img src="assets/antibes.png?v=orig2" alt="" draggable="false" />
         <span class="landmark-label">Antibes</span>
-      </button>
-
-      <button
-        class="landmark"
-        type="button"
-        data-id="nice"
-        data-left="78"
-        data-top="20"
-        data-w="18"
-        aria-label="Nice"
-      >
-        <img src="assets/nice.png" alt="" draggable="false" />
-        <span class="landmark-label">Nice</span>
       </button>
 
       <button
@@ -126,7 +97,7 @@
         data-w="14"
         aria-label="Nice Airport"
       >
-        <img src="assets/nice-airport.png" alt="" draggable="false" />
+        <img src="assets/nice-airport.png?v=orig2" alt="" draggable="false" />
         <span class="landmark-label">Nice Airport</span>
       </button>
 
@@ -139,7 +110,7 @@
         data-w="10"
         aria-label="Saint-Émilion"
       >
-        <img src="assets/saint-emilion.png" alt="" draggable="false" />
+        <img src="assets/saint-emilion.png?v=orig2" alt="" draggable="false" />
         <span class="landmark-label">Saint-Émilion</span>
       </button>
     </div>
@@ -147,6 +118,32 @@
     <!-- Minimal live position readouts are added to stickers by app.js. -->
 
     <!-- Minimal caption that appears near a clicked sticker -->
+    </div><!-- /world -->
+    <div class="stage-vignette" aria-hidden="true"></div>
+
+    <div class="board-controls" id="boardControls" aria-label="Map preview controls">
+      <button class="control-button" id="editToggle" type="button" aria-pressed="true">
+        <span>Edit positions</span>
+        <span class="control-status" id="editStatus">On</span>
+      </button>
+      <button class="control-button control-button--secondary" id="copyLayout" type="button">
+        Copy layout
+      </button>
+      <button class="control-button control-button--secondary" id="openAirport" type="button">
+        Airport scene
+      </button>
+      <button class="control-button control-button--secondary" id="restoreRemoved" type="button" hidden>
+        Restore removed
+      </button>
+    </div>
+
+    <header class="masthead">
+      <p class="masthead-date">19 September 2027</p>
+      <h1 class="masthead-title">Eva &amp; Josh</h1>
+      <p class="masthead-place">Côte d&rsquo;Azur</p>
+    </header>
+
+
     <div class="caption" id="caption" hidden role="status">
       <p class="caption-kicker" id="captionKicker"></p>
       <p class="caption-title" id="captionTitle"></p>
@@ -154,7 +151,23 @@
       <button class="caption-close" id="captionClose" type="button" aria-label="Close">×</button>
     </div>
 
-    <p class="hint" id="hint">Hover a place — click for a note</p>
+    <p class="hint" id="hint">Tap a place — or play our story</p>
+    <button class="play-button" id="playButton" type="button" hidden>
+      <span class="play-icon" aria-hidden="true">&#9654;</span> Play our story
+    </button>
+
+    <!-- Guided story card (driven by STEPS in app.js) -->
+    <section class="story-card" id="storyCard" hidden aria-live="polite">
+      <button class="story-exit" id="storyExit" type="button" aria-label="Exit story">&times;</button>
+      <p class="story-kicker" id="storyKicker"></p>
+      <h2 class="story-title" id="storyTitle"></h2>
+      <div class="story-body" id="storyBody"></div>
+      <nav class="story-nav">
+        <button class="story-btn" id="storyBack" type="button">Back</button>
+        <span class="story-dots" id="storyDots" aria-hidden="true"></span>
+        <button class="story-btn story-btn--next" id="storyNext" type="button">Next</button>
+      </nav>
+    </section>
 
     <!-- Nice Airport detail scene (opened from Nice / Nice Airport landmarks) -->
     <div
@@ -183,20 +196,16 @@
 
         <button class="airport-scene-close" id="airportSceneClose" type="button" aria-label="Close">×</button>
 
-        <div class="airport-props" aria-hidden="true">
-          <img class="airport-prop prop-airplane" src="assets/airplane.png" alt="" draggable="false" title="Airplane" />
-          <img class="airport-prop prop-train" src="assets/train.png" alt="" draggable="false" title="Train" />
-          <img class="airport-prop prop-suv" src="assets/suv.png" alt="" draggable="false" title="SUV" />
-          <img class="airport-prop prop-suitcases" src="assets/suitcases.png" alt="" draggable="false" title="Suitcases" />
-          <img class="airport-prop prop-woven-bag" src="assets/woven-bag.png" alt="" draggable="false" title="Woven bag" />
-          <img class="airport-prop prop-palms" src="assets/palms.png" alt="" draggable="false" title="Palms" />
-          <img class="airport-prop prop-lemon" src="assets/lemon.png" alt="" draggable="false" title="Lemon" />
-          <img class="airport-prop prop-sailboat" src="assets/sailboat-airport.png" alt="" draggable="false" title="Sailboat" />
+        <div class="airport-props" id="airportProps">
+          <div class="airport-prop" data-prop="train-men"><img src="assets/train-men.png?v=recut1" alt="Friends waving from the train" draggable="false" /></div>
+          <div class="airport-prop" data-prop="train"><img src="assets/train.png?v=recut1" alt="Riviera train" draggable="false" /></div>
+          <div class="airport-prop" data-prop="suv"><img src="assets/suv.png?v=recut1" alt="Car to Cannes" draggable="false" /></div>
+          <div class="airport-prop" data-prop="suitcases"><img src="assets/suitcases.png?v=recut1" alt="Suitcases" draggable="false" /></div>
         </div>
       </div>
     </div>
   </div>
 
-  <script src="app.js?v=panorama11"></script>
+  <script src="app.js?v=airport1"></script>
 </body>
 </html>
